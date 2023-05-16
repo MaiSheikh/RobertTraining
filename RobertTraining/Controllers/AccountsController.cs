@@ -12,10 +12,12 @@ namespace RobertTraining.Controllers
     public class AccountsController : ControllerBase
     {
         private readonly ContextDb _context;
-        public AccountsController(ContextDb con)
+        
+        public AccountsController(ContextDb context)
         {
-            _context = con;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
+        
         [HttpGet]
         public async Task<IEnumerable<Account>> Get()
         {
@@ -24,11 +26,9 @@ namespace RobertTraining.Controllers
 
         // GET api/<AccountsController>/5
         [HttpGet("{id}")]
-        public async Task< IActionResult >GetByID(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var account = await _context.Accounts.Where(x => x.Id == id).FirstOrDefaultAsync();
-
-     
+            var account = await _context.Accounts.SingleOrDefaultAsync(i => i.Id == id);
 
             return account == null ? NotFound() : Ok(account) ;
         }
@@ -37,13 +37,10 @@ namespace RobertTraining.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Account account)
         {
-            
             await _context.Accounts.AddAsync(account);
-           
             await _context.SaveChangesAsync();
-
-           
-            return CreatedAtAction(nameof(GetByID), new { id = account.Id }, account);
+            
+            return CreatedAtAction(nameof(GetById), new { id = account.Id }, account);
         }
 
         // PUT api/<AccountsController>/5
@@ -51,20 +48,22 @@ namespace RobertTraining.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] Account account)
         {
             if (id != account.Id) return BadRequest();
+            
             _context.Entry(account).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-
+            
             return NoContent();
-
         }
 
         // DELETE api/<AccountsController>/5
         [HttpDelete("{id}")]
         public async Task< IActionResult> Delete(int id)
         {
-            var accountToDelete = await _context.Accounts.FindAsync(id);
-            if (accountToDelete == null) return NotFound();
-            _context.Accounts.Remove(accountToDelete);
+            var account = await _context.Accounts.SingleOrDefaultAsync(i => i.Id == id);
+            
+            if (account == null) return NotFound();
+            
+            _context.Accounts.Remove(account);
             await _context.SaveChangesAsync();
 
             return NoContent();

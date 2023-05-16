@@ -13,9 +13,10 @@ namespace RobertTraining.Controllers
     public class TransactionsController : ControllerBase
     {
         private readonly ContextDb _context;
-        public TransactionsController(ContextDb con)
+        
+        public TransactionsController(ContextDb context)
         {
-            _context = con;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         // GET: api/<TransactionsController>
@@ -27,102 +28,49 @@ namespace RobertTraining.Controllers
 
         // GET api/<TransactionsController>/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetByID(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var transaction = await _context.Transactions.Where(b => b.Id == id).FirstOrDefaultAsync();
+            var transaction = await _context.Transactions.SingleOrDefaultAsync(i => i.Id == id);
             
-
             return transaction == null ? NotFound() : Ok(transaction);
         }
 
         // POST api/<TransactionsController>
         [HttpPost]
-        public  async Task<IActionResult> Create([FromBody] Transaction transaction)
+        public async Task<IActionResult> Create([FromBody] Transaction transaction)
         {
-
             await _context.Transactions.AddAsync(transaction);
-          Account acc=  _context.Accounts.Single(c => c.Id == transaction.AccountId);
-            if (acc != null)
-            {
-                acc.Balance = acc.Balance + transaction.Delta;
-            }
-            else
-                return BadRequest();
 
+            var account = await _context.Accounts.SingleOrDefaultAsync(c => c.Id == transaction.AccountId);
+            
+            // TODO - Ifall account är null (med detta så kan det vara läge att läsa på om exception-middleware:
+            // https://jasonwatmore.com/post/2022/01/17/net-6-global-error-handler-tutorial-with-example
+
+            if (account == null) throw new NullReferenceException();
+            
+            account.Balance = account.Balance + transaction.Delta;
+            
             await _context.SaveChangesAsync();
 
-
-            return CreatedAtAction(nameof(GetByID), new { id = transaction.Id }, transaction);
-            // Account account = _context.Accounts.Single(c => c.Id == transaction.AccountId);
-            //Transaction t = new Transaction
-            //{
-
-            //    Delta = transaction.Delta,
-            //    AccountId = transaction.AccountId,
-            //    TimeStamp = DateTime.Now,
-            //    Account = account
-
-            //};
-            //await _context.Transactions.AddAsync(t);
-
-            //await _context.SaveChangesAsync();
-
-
-           // return CreatedAtAction(nameof(GetByID), new { id = transaction.Id }, transaction);
+            return CreatedAtAction(nameof(GetById), new { id = transaction.Id }, transaction);
         }
-
-        // PUT api/<TransactionsController>/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Transaction transaction)
-        {
-            if (id != transaction.Id) return BadRequest();
-            
-           var acc = _context.Accounts.AsNoTracking().Include(c => c.Transactions).FirstOrDefault(c=>c.Id==id);
-            var oldDelta = acc.Transactions.FirstOrDefault(c => c.Id == id).Delta;
-            //_context.ChangeTracker.Clear();
-
-            _context.Entry(transaction).State = EntityState.Modified;
-            
-
-
-            if (acc != null)
-            {
-                if (oldDelta < transaction.Delta)
-                {
-                    var difference = transaction.Delta - oldDelta;
-                    acc.Balance = acc.Balance + difference;
-                }
-                else if (oldDelta > transaction.Delta)
-                {
-                    var difference = oldDelta - transaction.Delta ;
-
-
-                    acc.Balance = acc.Balance - difference;
-                }
-            }
-            else
-                return BadRequest();
-            _context.Entry(acc).State = EntityState.Modified;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
+        
         // DELETE api/<TransactionsController>/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var transactionToRemove = await _context.Transactions.FindAsync(id);
-            if (transactionToRemove == null) return NotFound();
-            _context.Transactions.Remove(transactionToRemove);
-            Account acc = _context.Accounts.Single(c => c.Id == transactionToRemove.AccountId);
-            if (acc != null)
-            {
-                acc.Balance = acc.Balance - transactionToRemove.Delta;
-            }
-            else
-                return BadRequest();
+            var transaction = await _context.Transactions.SingleOrDefaultAsync(i => i.Id == id);
+            
+            if (transaction == null) return NotFound();
+            
+            _context.Transactions.Remove(transaction);
+            
+            var account = await _context.Accounts.SingleOrDefaultAsync(c => c.Id == transaction.AccountId);
+
+            if (account is null) throw new NullReferenceException("Med ett bra meddelande");
+            
+            account.Balance -= transaction.Delta;
+            
             await _context.SaveChangesAsync();
 
             return NoContent();

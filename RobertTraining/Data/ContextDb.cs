@@ -8,11 +8,9 @@ namespace RobertTraining.Data
         public ContextDb(DbContextOptions<ContextDb> options ) :base(options)
         {
             // this.Configuration.LazyLoadingEnabled = false;
-
         }
+        
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
-
-        
     }
 }
