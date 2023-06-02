@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RobertTraining.Data;
-using RobertTraining.Models;
+using Business_Logic_Layer.Features;
+using Business_Logic_Layer.Models;
+
+
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -11,60 +13,51 @@ namespace RobertTraining.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        private readonly ContextDb _context;
+        private  Business_Logic_Layer.Features.AccountBLL _bll;
         
-        public AccountsController(ContextDb context)
+        public AccountsController(AccountBLL bll)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _bll = bll ?? throw new ArgumentNullException(nameof(bll));
         }
         
         [HttpGet]
-        public async Task<IEnumerable<Account>> Get()
+        public async Task<IEnumerable<AccountModel>> Get()
         {
-            return await _context.Accounts.ToListAsync();
+            return await _bll.GetAllAcountsFromBLL();
         }
 
         // GET api/<AccountsController>/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<ActionResult<AccountModel>> GetById(int id)
         {
-            var account = await _context.Accounts.SingleOrDefaultAsync(i => i.Id == id);
+            var result = await _bll.GetAccountByIdFromBLL(id);
 
-            return account == null ? NotFound() : Ok(account) ;
+            return Ok(result);
         }
 
         // POST api/<AccountsController>
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Account account)
+        public async Task<ActionResult> Create([FromBody] AccountModel accountModel)
         {
-            await _context.Accounts.AddAsync(account);
-            await _context.SaveChangesAsync();
-            
-            return CreatedAtAction(nameof(GetById), new { id = account.Id }, account);
+            var result = await _bll.CreateAccountFromBLL(accountModel);
+
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
         // PUT api/<AccountsController>/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Account account)
-        {
-            if (id != account.Id) return BadRequest();
-            
-            _context.Entry(account).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-            
+        public async Task<ActionResult> Update(int id, [FromBody] AccountModel accountModel)
+        {         
+           await _bll.UpdateAccountFromBLL(accountModel);
+
             return NoContent();
         }
 
         // DELETE api/<AccountsController>/5
         [HttpDelete("{id}")]
-        public async Task< IActionResult> Delete(int id)
-        {
-            var account = await _context.Accounts.SingleOrDefaultAsync(i => i.Id == id);
-            
-            if (account == null) return NotFound();
-            
-            _context.Accounts.Remove(account);
-            await _context.SaveChangesAsync();
+        public async Task <ActionResult> Delete(int id)
+        {                     
+            await _bll.DeleteAccountFromBLL(id);
 
             return NoContent();
         }

@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using RobertTraining.Data;
+using Data_Access_Layer.Data;
 
 #nullable disable
 
 namespace RobertTraining.Migrations
 {
     [DbContext(typeof(ContextDb))]
-    [Migration("20230511070721_fix database Account table")]
-    partial class fixdatabaseAccounttable
+    [Migration("20230511123041_fix database Account1")]
+    partial class fixdatabaseAccount1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -72,13 +72,16 @@ namespace RobertTraining.Migrations
 
             modelBuilder.Entity("RobertTraining.Models.Transaction", b =>
                 {
-                    b.HasOne("RobertTraining.Models.Account", "Account")
-                        .WithMany()
+                    b.HasOne("RobertTraining.Models.Account", null)
+                        .WithMany("Transactions")
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
 
-                    b.Navigation("Account");
+            modelBuilder.Entity("RobertTraining.Models.Account", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
         }

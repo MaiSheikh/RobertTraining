@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RobertTraining.Models
+namespace Data_Access_Layer.Entities
 {
     public class Transaction
     {
