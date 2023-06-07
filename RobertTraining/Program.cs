@@ -1,8 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Business_Logic_Layer;
+using Business_Logic_Layer.Features.Transaction;
 using Data_Access_Layer.Data;
-using Business_Logic_Layer;
-using Business_Logic_Layer.Features;
-using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +13,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped< Business_Logic_Layer.Features.AccountBLL >();
-builder.Services.AddScoped<Business_Logic_Layer.Features.TransactionBLL>();
+builder.Services.AddScoped<AccountBLL>();
+builder.Services.AddScoped<TransactionBLL>();
 
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));

@@ -1,58 +1,55 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Business_Logic_Layer.Features;
-using Business_Logic_Layer.Models;
+﻿using Business_Logic_Layer.Features.Account.Models;
+using Business_Logic_Layer.Features.Transaction;
+using Microsoft.AspNetCore.Mvc;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace RobertTraining.Controllers
+namespace RobertTraining.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class TransactionsController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class TransactionsController : ControllerBase
+    private readonly TransactionBLL _bll;
+
+
+    public TransactionsController(TransactionBLL bll)
     {
-        private Business_Logic_Layer.Features.TransactionBLL _bll;
+        _bll = bll ?? throw new ArgumentNullException(nameof(bll));
+    }
 
+    // GET: api/<TransactionsController>
+    [HttpGet]
+    public async Task<IEnumerable<TransactionModel>> Get()
+    {
+        return await _bll.GetAllTransactionsFromBLL();
+    }
 
-        public TransactionsController(TransactionBLL bll)
-        {
-            _bll = bll ?? throw new ArgumentNullException(nameof(bll));
-        }
+    // GET api/<TransactionsController>/5
+    [HttpGet("{id}")]
+    public async Task<ActionResult<TransactionModel>> GetById(int id)
+    {
+        var result = await _bll.GetTransactionByIdFromBLL(id);
 
-        // GET: api/<TransactionsController>
-        [HttpGet]
-        public async Task<IEnumerable<TransactionModel>> Get()
-        {
-            return await _bll.GetAllTransactionsFromBLL();
-        }
+        return Ok(result);
+    }
 
-        // GET api/<TransactionsController>/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TransactionModel>> GetById(int id)
-        {
-            var result = await _bll.GetTransactionByIdFromBLL(id);
+    // POST api/<TransactionsController>
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] TransactionModel transactionModel)
+    {            
+        var result = await _bll.CreateTransactionFromBLL(transactionModel);
 
-            return Ok(result);
-        }
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
 
-        // POST api/<TransactionsController>
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TransactionModel transactionModel)
-        {            
-            var result = await _bll.CreateTransactionFromBLL(transactionModel);
+    // DELETE api/<TransactionsController>/5
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await _bll.DeleteTransactionFromBLL(id);
 
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
-        }
-
-        // DELETE api/<TransactionsController>/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-
-            await _bll.DeleteTransactionFromBLL(id);
-
-            return NoContent();
-        }
+        return NoContent();
     }
 }
