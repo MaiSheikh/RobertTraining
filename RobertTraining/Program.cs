@@ -2,13 +2,14 @@
 using Business_Logic_Layer.Features.Transaction;
 using Data_Access_Layer.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<ContextDb>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("SQL")));
-
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();

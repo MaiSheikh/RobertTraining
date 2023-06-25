@@ -10,11 +10,13 @@ public class AccountBLL
     private readonly ContextDb _context;
     private readonly IMapper _accountMapper;
 
-    public AccountBLL(ContextDb context, IMapper mapper)
+    public AccountBLL(ContextDb context, IMapper? mapper)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _accountMapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
+
+   
 
     public async Task<IEnumerable<AccountModel>> GetAllAcountsFromBLL()
     {
@@ -23,6 +25,8 @@ public class AccountBLL
         return accountsModel;
         // return await Task.FromResult( accountsModel);
     }
+
+
 
     public async Task<AccountModel> GetAccountByIdFromBLL(int id)
     {
