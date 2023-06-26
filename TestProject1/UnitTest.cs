@@ -10,38 +10,49 @@ using Moq;
 using Business_Logic_Layer;
 using Data_Access_Layer.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Security.Cryptography.X509Certificates;
+using Business_Logic_Layer.Features.Transaction;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using System;
 
 namespace UnitTestProject
 {
     public class AccountUnitTest
     {
+        DbContextOptions<ContextDb> options;
+        ContextDb context;
+        AutoMapperProfile myProfile;
+        MapperConfiguration configuration;
+        Mapper mapper;
+       AccountBLL _bll;
 
+        public AccountUnitTest()
+        {
+           // options = new DbContextOptionsBuilder<ContextDb>().UseInMemoryDatabase("BloggingControllerTest").ConfigureWarnings(b => b.Ignore(InMemoryEventId.TransactionIgnoredWarning)).Options;
+              options = new DbContextOptionsBuilder<ContextDb>().UseInMemoryDatabase("RobertTrainingDb1").Options;
+            context = new ContextDb(options);
 
+            myProfile = new AutoMapperProfile();
+             configuration = new MapperConfiguration(cfg => cfg.AddProfile(myProfile));
+             mapper = new Mapper(configuration);
+
+           _bll = new AccountBLL(context, mapper);        
+        }
 
         [Fact]
         public async Task GetAllAcounts_ReturnIEnumerableOfAccountModel()
         {
             //arrange
-
-
-            var options = new DbContextOptionsBuilder<ContextDb>().UseInMemoryDatabase("RobertTrainingDb1").Options;
-            var context = new ContextDb(options);
-
-            var myProfile = new AutoMapperProfile();
-            var configuration = new MapperConfiguration(cfg => cfg.AddProfile(myProfile));
-            var mapper = new Mapper(configuration);
-
-            var _bll = new Business_Logic_Layer.Features.Account.AccountBLL(context, mapper);
-            Seed(context);
+                Seed(context);
 
             //act
 
             var result = await _bll.GetAllAcountsFromBLL();
-            //assert
+                //assert
 
-            context.Accounts.Should().HaveCount(2);
+                context.Accounts.Should().HaveCount(2);
 
-            Assert.IsAssignableFrom<IEnumerable<AccountModel>>(result);
+                Assert.IsAssignableFrom<IEnumerable<AccountModel>>(result);
 
         }
 
@@ -50,16 +61,7 @@ namespace UnitTestProject
         {
             //arrange
 
-            int id = 4;
-            var options = new DbContextOptionsBuilder<ContextDb>().UseInMemoryDatabase("RobertTrainingDb1").Options;
-
-            var context = new ContextDb(options);
-
-            var myProfile = new AutoMapperProfile();
-            var configuration = new MapperConfiguration(cfg => cfg.AddProfile(myProfile));
-            var mapper = new Mapper(configuration);
-
-            var _bll = new Business_Logic_Layer.Features.Account.AccountBLL(context, mapper);
+            int id = 4;      
             Seed(context);
 
             //act
@@ -74,20 +76,9 @@ namespace UnitTestProject
         public async Task UpdateAccountById_ReturnVoid()
         {
             //arrange
-
-           
-            var options = new DbContextOptionsBuilder<ContextDb>().UseInMemoryDatabase("RobertTrainingDb1").Options;
-
-
-            var context = new ContextDb(options);
-
-            var myProfile = new AutoMapperProfile();
-            var configuration = new MapperConfiguration(cfg => cfg.AddProfile(myProfile));
-            var mapper = new Mapper(configuration);
-
-            var _bll = new Business_Logic_Layer.Features.Account.AccountBLL(context, mapper);
-            //act
             Seed(context);
+
+            //act
             Account updatedAccount = new Account
             {
                 Id = 2,

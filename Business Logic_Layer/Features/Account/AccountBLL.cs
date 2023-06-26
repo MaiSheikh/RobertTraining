@@ -53,7 +53,10 @@ public class AccountBLL
         var account = _accountMapper.Map<AccountModel, Data_Access_Layer.Entities.Account>(accountModel);
         if (account == null) throw new ArgumentNullException(nameof(account));
 
-        _context.Entry(account).State = EntityState.Modified;
+        //  _context.Entry(account).State = EntityState.Modified;
+        _context.Accounts.Update(account);
+       
+
         await _context.SaveChangesAsync();
     }
 
