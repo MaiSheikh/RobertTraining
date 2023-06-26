@@ -1,128 +1,102 @@
-
-using Xunit;
-using Business_Logic_Layer.Features.Account;
-using Data_Access_Layer.Data;
 using AutoMapper;
-using FluentAssertions;
-using Business_Logic_Layer.Features.Account.Models;
-using Microsoft.EntityFrameworkCore;
-using Moq;
 using Business_Logic_Layer;
+using Business_Logic_Layer.Features.Account;
+using Business_Logic_Layer.Features.Account.Models;
+using Data_Access_Layer.Data;
 using Data_Access_Layer.Entities;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.Security.Cryptography.X509Certificates;
-using Business_Logic_Layer.Features.Transaction;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using System;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 
-namespace UnitTestProject
+namespace UnitTestProject;
+
+public class AccountUnitTest
 {
-    public class AccountUnitTest
+    private readonly ContextDb _context;
+    private readonly Mapper _mapper;
+    private readonly AccountBLL _bll;
+
+    public AccountUnitTest()
     {
-        DbContextOptions<ContextDb> options;
-        ContextDb context;
-        AutoMapperProfile myProfile;
-        MapperConfiguration configuration;
-        Mapper mapper;
-       AccountBLL _bll;
+        var options = new DbContextOptionsBuilder<ContextDb>()
+            .UseInMemoryDatabase("RobertTrainingDb1")
+            .Options;
+        
+        _context = new ContextDb(options); 
+        Seed(_context);
+        
+        var myProfile = new AutoMapperProfile();
+        var configuration = new MapperConfiguration(cfg => cfg.AddProfile(myProfile)); 
+        _mapper = new Mapper(configuration);
 
-        public AccountUnitTest()
+        _bll = new AccountBLL(_context, _mapper);        
+    }
+
+    [Fact]
+    public async Task GetAllAcounts_ReturnIEnumerableOfAccountModel()
+    {
+        // act
+        var result = await _bll.GetAllAcountsFromBLL();
+
+        // assert
+        Assert.IsAssignableFrom<IEnumerable<AccountModel>>(result);
+    }
+
+    [Fact]
+    public async Task GetAccountById_ReturnAccountModel()
+    {
+        //arrange
+        var accounts = await _context.Accounts.ToListAsync();   
+
+        //act
+        var result = await _bll.GetAccountByIdFromBLL(accounts.First().Id);
+
+        //assert
+        Assert.IsAssignableFrom<AccountModel>(result);
+    }
+    
+    [Fact]
+    public async Task GetAccountById_Should_Throw_Exception_If_Not_Exist()
+    {
+        //arrange
+        var accounts = await _context.Accounts.ToListAsync();
+        var idNotInDatabase = accounts.Last().Id + 1;
+
+        //assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _bll.GetAccountByIdFromBLL(idNotInDatabase));
+    }
+
+    [Fact]
+    public async Task Balance_should_be_updated_with_expected_amount()
+    {
+        var account = (await _context.Accounts.ToListAsync()).First();
+        var oldBalance = account.Balance;
+        _context.ChangeTracker.Clear();
+
+        account.Balance += 100;
+        await _bll.UpdateAccountFromBLL(_mapper.Map< Account,AccountModel>(account));
+
+        account.Balance.Should().Be(oldBalance + 100);
+    }
+
+    private void Seed(ContextDb context)
+    {
+        var accounts = new[]
         {
-           // options = new DbContextOptionsBuilder<ContextDb>().UseInMemoryDatabase("BloggingControllerTest").ConfigureWarnings(b => b.Ignore(InMemoryEventId.TransactionIgnoredWarning)).Options;
-              options = new DbContextOptionsBuilder<ContextDb>().UseInMemoryDatabase("RobertTrainingDb1").Options;
-            context = new ContextDb(options);
-
-            myProfile = new AutoMapperProfile();
-             configuration = new MapperConfiguration(cfg => cfg.AddProfile(myProfile));
-             mapper = new Mapper(configuration);
-
-           _bll = new AccountBLL(context, mapper);        
-        }
-
-        [Fact]
-        public async Task GetAllAcounts_ReturnIEnumerableOfAccountModel()
-        {
-            //arrange
-                Seed(context);
-
-            //act
-
-            var result = await _bll.GetAllAcountsFromBLL();
-                //assert
-
-                context.Accounts.Should().HaveCount(2);
-
-                Assert.IsAssignableFrom<IEnumerable<AccountModel>>(result);
-
-        }
-
-        [Fact]
-        public async Task GetAccountById_ReturnAccountModel()
-        {
-            //arrange
-
-            int id = 4;      
-            Seed(context);
-
-            //act
-            var result = await _bll.GetAccountByIdFromBLL(id);
-            //assert
-            Assert.NotNull(result);
-            Assert.IsAssignableFrom<AccountModel>(result);
-
-        }
-
-        [Fact]
-        public async Task UpdateAccountById_ReturnVoid()
-        {
-            //arrange
-            Seed(context);
-
-            //act
-            Account updatedAccount = new Account
+            new Account
             {
-                Id = 2,
                 Balance = 100,
                 CreatedTime = DateTime.Now,
                 ReferenceId = new Guid()
-            };
-            // context.Accounts.Update(updatedAccount);   
-            var account = mapper.Map< Data_Access_Layer.Entities.Account,AccountModel> (updatedAccount);
-          
-            await _bll.UpdateAccountFromBLL(account);
-            //assert
-           
-
-            context.Accounts.SingleOrDefaultAsync(i => i.Id == 2).Should().Be(updatedAccount);
-
-        }
-
-        private void Seed(ContextDb context)
-        {
-            var accounts = new[]
+            },
+            new Account
             {
-                new Account
-                {
-                    Id = 2,
-                    Balance = 1100,
-                    CreatedTime = DateTime.Now,
-                    ReferenceId = new Guid()
-                },
-                new Account
-                {
-
-                    Id = 4,
-                    Balance = 22100,
-                    CreatedTime = DateTime.Now,
-                    ReferenceId = new Guid()
-                }
-
-
-
-            };
-            context.Accounts.AddRange(accounts);
-            context.SaveChanges();
-
-        }
+                Balance = 100,
+                CreatedTime = DateTime.Now,
+                ReferenceId = new Guid()
+            }
+        };
+            
+        context.Accounts.AddRange(accounts);
+        context.SaveChanges();
     }
 }
