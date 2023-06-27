@@ -15,9 +15,7 @@ public class AccountBLL
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _accountMapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
-
-   
-
+    
     public async Task<IEnumerable<AccountModel>> GetAllAcountsFromBLL()
     {
         var accountsFromDB = await _context.Accounts.ToListAsync();
@@ -25,8 +23,6 @@ public class AccountBLL
         return accountsModel;
         // return await Task.FromResult( accountsModel);
     }
-
-
 
     public async Task<AccountModel> GetAccountByIdFromBLL(int id)
     {

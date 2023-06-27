@@ -1,6 +1,8 @@
 ﻿using Business_Logic_Layer;
 using Business_Logic_Layer.Features.Account.Models;
 using Business_Logic_Layer.Features.Account;
+using Business_Logic_Layer.Features.Account.Queries;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -13,23 +15,25 @@ namespace RobertTraining.Controllers;
 public class AccountsController : ControllerBase
 {
     private readonly AccountBLL _bll;
+    private IMediator _mediator;
         
-    public AccountsController(AccountBLL bll)
+    public AccountsController(AccountBLL bll, IMediator mediator)
     {
         _bll = bll ?? throw new ArgumentNullException(nameof(bll));
+        _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
         
     [HttpGet]
     public async Task<IEnumerable<AccountModel>> Get()
     {
-        return await _bll.GetAllAcountsFromBLL();
+        return await _mediator.Send(new GetAllAccountsQuery());
     }
 
     // GET api/<AccountsController>/5
     [HttpGet("{id}")]
     public async Task<ActionResult<AccountModel>> GetById(int id)
     {
-        var result = await _bll.GetAccountByIdFromBLL(id);
+        var result = await _mediator.Send(new GetByIdQuery(id));
 
         return Ok(result);
     }
