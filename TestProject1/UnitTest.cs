@@ -78,6 +78,17 @@ public class AccountUnitTest
         account.Balance.Should().Be(oldBalance + 100);
     }
 
+    [Fact]
+    public async Task DeleteAccount()
+    {
+        var account = (await _context.Accounts.ToListAsync()).First();
+     
+        await _bll.DeleteAccountFromBLL(account.Id);
+
+        _context.Accounts.Should().NotContain(account); 
+      
+    }
+
     private void Seed(ContextDb context)
     {
         var accounts = new[]
@@ -99,4 +110,6 @@ public class AccountUnitTest
         context.Accounts.AddRange(accounts);
         context.SaveChanges();
     }
+
+
 }

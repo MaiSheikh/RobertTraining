@@ -4,6 +4,7 @@ using Business_Logic_Layer.Features.Account;
 using Business_Logic_Layer.Features.Account.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Business_Logic_Layer.Features.Account.Commands;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -42,25 +43,32 @@ public class AccountsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] AccountModel accountModel)
     {
-        var result = await _bll.CreateAccountFromBLL(accountModel);
+       // var result = await _bll.CreateAccountFromBLL(accountModel);
+       var result= await _mediator.Send(new CreateAccountCommand(accountModel));
 
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+       // return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+       return Ok(result);   
     }
 
     // PUT api/<AccountsController>/5
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(int id, [FromBody] AccountModel accountModel)
-    {         
-        await _bll.UpdateAccountFromBLL(accountModel);
+    {
+        var result = await _mediator.Send(new UpdateAccountCommand(accountModel));
 
-        return NoContent();
+        // return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        return Ok(result);
+        //await _bll.UpdateAccountFromBLL(accountModel);
+
+        //return NoContent();
     }
 
     // DELETE api/<AccountsController>/5
     [HttpDelete("{id}")]
     public async Task <ActionResult> Delete(int id)
-    {                     
-        await _bll.DeleteAccountFromBLL(id);
+    {
+        //await _bll.DeleteAccountFromBLL(id);
+         await _mediator.Send(new DeleteAccountCommand(id));
 
         return NoContent();
     }

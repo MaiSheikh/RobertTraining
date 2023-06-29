@@ -30,15 +30,15 @@ public class GetByIdQueryHandler : IRequestHandler<GetByIdQuery, AccountModel>
     
     public async Task<AccountModel> Handle(GetByIdQuery request, CancellationToken cancellationToken)
     {
-        //var account = await _context.Accounts.SingleOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
-        //if (account == null) throw new ArgumentNullException(nameof(account));
-        //var accountModel = _mapper.Map<Data_Access_Layer.Entities.Account, AccountModel>(account);
+        var account = await _context.Accounts.SingleOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
+        if (account == null) throw new ArgumentNullException(nameof(account));
+        var accountModel = _mapper.Map<Data_Access_Layer.Entities.Account, AccountModel>(account);
 
-        var account = new AccountModel
-        {
-            Id = request.Id
-        };
+        //var accountModel = new AccountModel
+        //{
+        //    Id = request.Id
+        //};
         
-        return account;
+        return accountModel;
     }
 }
